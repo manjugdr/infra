@@ -87,7 +87,7 @@ eks_max_size_default_node        = 4
 eks_min_size_default_node        = 1
 
 #eks-custom nodegroup
-custom_node_group_name = ["commonservicesv1-0-prod-customnodegroups"]
+custom_node_group_name = ["commonservicesv1-0-prod-customnodegroups1"]
 custom_node_group_instance_type = ["t2.micro"]
 custom_node_disk_size = [40]
 eks_desired_size_custom_node = [1]
