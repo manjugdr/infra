@@ -30,24 +30,24 @@ module "remoteprovisioner" {
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefile"
-    key    = "commonservices/prod/vpc/terraform.tfstate"
+    bucket = "commonservices1"
+    key    = "prod/vpc/terraform.tfstate"
     region = "ap-south-1"
   }
 }
 data "terraform_remote_state" "eks" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefile"
-    key    = "commonservices/prod/eks/terraform.tfstate"
+    bucket = "commonservices1"
+    key    = "prod/eks/terraform.tfstate"
     region = "ap-south-1"
   }
 }
 data "terraform_remote_state" "ec2" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefile"
-    key    = "commonservices/prod/ec2/terraform.tfstate"
+    bucket = "commonservices1"
+    key    = "prod/ec2/terraform.tfstate"
     region = "ap-south-1"
   }
 }
