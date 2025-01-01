@@ -134,7 +134,7 @@ jobs:
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
       run: |
         terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+        terraform plan -var-file="runtime-variables.tfvars" -var-file="${{ env.ENVIRONMENT }}-terraform.tfvars"
         
     - name: Initialize and plan Terraform EC2
       if: env.EC2_PLAN == 'true' 
