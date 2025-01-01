@@ -273,7 +273,7 @@ main() {
   #  install_prometheus_grafana
     install_externalsecretoperator
     install_argo_cd
-  #  push_nginxlogs_timezone
+    push_nginxlogs_timezone
 }
 
 # Call main function with arguments
