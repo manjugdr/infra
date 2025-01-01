@@ -5,7 +5,7 @@ resource "null_resource" "provision_bastion" {
       type        = "ssh"
       host        = var.bastionhost_publicip
       user        = "ec2-user"
-      private_key = file("bastionhost-key.pem") // Update with the correct path to your SSH private key
+      private_key = file("aws-manju.pem") // Update with the correct path to your SSH private key
   }
   /*provisioner "file" {
     source      = "./bastionhost-installations.sh"  // Path to your script in the Terraform repository
