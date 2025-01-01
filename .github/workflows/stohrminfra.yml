@@ -146,7 +146,14 @@ jobs:
         terraform init
         terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
         terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
-
+    
+    - name: Terraform Plan for ECR
+      if: ${{ env.ECR_PLAN == 'true' }}
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
+      run: |
+        terraform init
+        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+        
     - name: Apply Terraform VPC
       if: env.VPC_APPLY == 'true'
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/vpc
@@ -162,10 +169,12 @@ jobs:
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ec2
       run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
 
-    - name: Apply Terraform ecr
-      if: env.ECR_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ecr
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+    - name: Terraform apply for ECR
+      if: ${{ env.ECR_PLAN == 'true' }}
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
+      run: |
+        terraform init
+        terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
 
     - name: Apply Terraform efs
       if: env.EFS_APPLY == 'true'
