@@ -12,3 +12,12 @@ variable "environment" {
   description = "Environment -Dev/QA/Stage/Prod"
   default = "dev"
 }
+
+# Common
+variable "aws_region" {
+  description = "AWS region"
+}
+variable "bucket_name" {
+  description = "BucketName"
+  default = "default-tfstate"
+}
