@@ -112,7 +112,7 @@ jobs:
         aws-region: ap-south-1  # Adjust as necessary for your region        
         
     - name: Create .tfvars file commonservices
-      if: env.APPLICATION == 'commonservices'
+      if: env.APPLICATION == 'stohrm1-0'
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
       run: |
         cat <<EOF > runtime-variables.tfvars
