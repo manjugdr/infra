@@ -8,3 +8,7 @@ variable "project_name" {
   description = "ProjectName" 
   default = "powerpay2.0"
 }
+variable "environment" {
+  description = "Environment -Dev/QA/Stage/Prod"
+  default = "dev"
+}
