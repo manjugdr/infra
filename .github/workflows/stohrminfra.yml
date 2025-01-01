@@ -149,7 +149,7 @@ jobs:
     
     - name: Terraform Plan for ECR
       if: ${{ env.ECR_PLAN == 'true' }}
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ecr
       run: |
         terraform init
         terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
@@ -171,7 +171,7 @@ jobs:
 
     - name: Terraform apply for ECR
       if: ${{ env.ECR_PLAN == 'true' }}
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ecr
       run: |
         terraform init
         terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
