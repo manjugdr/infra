@@ -2,8 +2,8 @@
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefile"
-    key    = "commonservices/prod/vpc/terraform.tfstate"
+    bucket = "commonservices1"
+    key    = "prod/vpc/terraform.tfstate"
     region = "ap-south-1"
   }
 }
