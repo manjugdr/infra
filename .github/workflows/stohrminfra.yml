@@ -145,6 +145,7 @@ jobs:
       run: |
         terraform init
         terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+        terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
 
     - name: Apply Terraform VPC
       if: env.VPC_APPLY == 'true'
