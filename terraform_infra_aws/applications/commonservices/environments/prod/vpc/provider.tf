@@ -6,8 +6,8 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "ascent-terraform-statefile"
-    key    = "commonservices1/prod/vpc/terraform.tfstate"
+    bucket = "commonservices1"
+    key    = "prod/vpc/terraform.tfstate"
     region = "ap-south-1"
   }
 }
