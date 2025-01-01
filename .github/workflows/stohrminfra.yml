@@ -77,33 +77,35 @@ jobs:
       run: |
         echo "ENVIRONMENT=${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
         echo "APPLICATION=${{ env.APPLICATION }}" >> $GITHUB_ENV
-        echo "VPC_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.VPC_PLAN == 'true' }}" >> $GITHUB_ENV
-        echo "EKS_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.EKS_PLAN == 'true' }}" >> $GITHUB_ENV
-        echo "EC2_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.EC2_PLAN == 'true' }}" >> $GITHUB_ENV
-        echo "ECR_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.ECR_PLAN == 'true' }}" >> $GITHUB_ENV
-        echo "EFS_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.EFS_PLAN == 'true' }}" >> $GITHUB_ENV
-        echo "REMOTEPROVISIONER_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.REMOTEPROVISIONER_PLAN == 'true' }}" >> $GITHUB_ENV  
-        
+
     - name: Set AWS Access Key ID and Secret Access Key based on Environment
       id: set-aws-credentials
       run: |
         if [ "${{ github.event.inputs.environment }}" == "dev" ]; then
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_USERNAME=${{ secrets.RDSDEV_STOHRM_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_PASSWORD=${{ secrets.RDSDEV_STOHRM_PASSWORD }}" >> $GITHUB_ENV           
         elif [ "${{ github.event.inputs.environment }}" == "qa" ]; then
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_QA }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_QA }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_USERNAME=${{ secrets.RDSQA_STOHRM_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_PASSWORD=${{ secrets.RDSQA_STOHRM_PASSWORD }}" >> $GITHUB_ENV  
         elif [ "${{ github.event.inputs.environment }}" == "stage" ]; then
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_STAGE }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_STAGE }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_USERNAME=${{ secrets.RDSSTAGE_STOHRM_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_PASSWORD=${{ secrets.RDSSTAGE_STOHRM_PASSWORD }}" >> $GITHUB_ENV
         elif [ "${{ github.event.inputs.environment }}" == "prod" ]; then
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_PROD }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_USERNAME=${{ secrets.RDSPROD_STOHRM_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_STOHRM_PASSWORD=${{ secrets.RDSPROD_STOHRM_PASSWORD }}" >> $GITHUB_ENV
         else
           echo "Invalid environment!"
           exit 1
         fi
-      
+
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -111,17 +113,23 @@ jobs:
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-south-1  # Adjust as necessary for your region        
         
-    - name: Create .tfvars file commonservices
-      if: env.APPLICATION == 'stohrm1-0'
+    - name: Initialize Terraform
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+      run: terraform init
+      
+    - name: Create .tfvars file stohrm
+      if: ${{ github.event.inputs.application == 'stohrm1-0' }}
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
       run: |
         cat <<EOF > runtime-variables.tfvars
+        rds_db_username = ["${{ env.RDS_STOHRM_USERNAME }}"]
+        rds_db_password = ["${{ env.RDS_STOHRM_PASSWORD }}"]
         aws_access_key_id = "${{ env.AWS_ACCESS_KEY_ID }}"
         aws_secret_access_key = "${{ env.AWS_SECRET_ACCESS_KEY }}"
         github_username = "${{ secrets.GITHB_USERNAME }}"
         github_password = "${{ secrets.GITHB_TOKEN }}"
         EOF
-        
+  
     - name: Initialize and plan Terraform VPC
       if: env.VPC_PLAN == 'true'
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/vpc
