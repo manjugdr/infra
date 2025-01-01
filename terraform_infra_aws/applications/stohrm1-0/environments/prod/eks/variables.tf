@@ -148,4 +148,14 @@ variable "eks_cluster_namespace" {
 variable "eksclusterautoscaler_iampolicyname" {
     type = string
 }
+#ebs volumes- ec2/eks
+variable "ebs_rootvol_size" {
+  type = map
+}
+variable "ebs_vol_type" {
+  type = map
+}
+//variable "public_subnet_ids" {
+//  description = "public subnet ID"
+//}
 
