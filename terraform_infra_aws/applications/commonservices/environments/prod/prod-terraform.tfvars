@@ -5,7 +5,7 @@ project_name = "commonservicesv1-0"
 
 
 #remote provisioner
-argocd_application_helmrepo = "https://github.com/Ascent-Infra/Powerpay-HelmCharts.git"
+argocd_application_helmrepo = "https://github.com/infra/Powerpay-HelmCharts.git"
 argocd_application_helmvalues_filename = "values-prod.yaml"
 argocd_application_helmservicename-with-path = ["secrets:helm-deployment/powerpay2.1/secretsmanagerchart","nginxlog:helm-deployment/powerpay2.1/commonservicesnginxingresslogschart","keycloak:helm-deployment/powerpay2.1/keycloakchart"] #  "keycloak:helm-deployment/powerpay2.1/keycloakchart" test
 
