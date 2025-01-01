@@ -1,0 +1,64 @@
+# Tree generated from tree.nathanfriend.io
+# Author: preethi
+# Last Updated Date: May-28-2024
+.
+└── terraform_aws/
+    ├── applications/
+    │   ├── stohrm/
+    │   │   └── environments/
+    │   │       ├── dev/
+    │   │       │   ├── main.tf
+    │   │       │   ├── variables.tf
+    │   │       │   ├── provider.tf
+    │   │       │   └── dev-terraform.tfvars
+    │   │       ├── qa/
+    │   │       │   ├── main.tf
+    │   │       │   ├── variables.tf
+    │   │       │   ├── provider.tf
+    │   │       │   └── qa-terraform.tfvars                  
+    │   │       └── prod/
+    │   │           ├── main.tf
+    │   │           ├── variables.tf
+    │   │           ├── provider.tf
+    │   │           └── prod-terraform.tfvars   
+    │   ├── powerpay2-0/
+    │   │   └── environments/
+    │   │       ├── dev/
+    │   │       │   ├── main.tf
+    │   │       │   ├── variables.tf
+    │   │       │   ├── provider.tf
+    │   │       │   └── dev-terraform.tfvars
+    │   │       ├── qa/
+    │   │       │   ├── main.tf
+    │   │       │   ├── variables.tf
+    │   │       │   ├── provider.tf
+    │   │       │   └── qa-terraform.tfvars                  
+    │   │       └── prod/
+    │   │           ├── main.tf
+    │   │           ├── variables.tf
+    │   │           ├── provider.tf
+    │   │           └── prod-terraform.tfvars       
+    │   └── commonservices/
+    │       └── environments/
+    │           ├── dev/
+    │           │   ├── main.tf
+    │           │   ├── variables.tf
+    │           │   ├── provider.tf
+    │           │   └── dev-terraform.tfvars
+    │           ├── qa/
+    │           │   ├── main.tf
+    │           │   ├── variables.tf
+    │           │   ├── provider.tf
+    │           │   └── qa-terraform.tfvars                  
+    │           └── prod/
+    │               ├── main.tf
+    │               ├── variables.tf
+    │               ├── provider.tf
+    │               └── prod-terraform.tfvars                        
+    └── modules/
+        ├── eks
+        ├── ecr
+        ├── ec2
+        ├── vpc
+        ├── rds - postgressql/mariadb
+        ├── RemoteProvisioner

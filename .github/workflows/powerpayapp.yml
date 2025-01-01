@@ -1,0 +1,153 @@
+name: Terraform Deploy powerpay2-1
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - qa
+          - stage
+          - prod
+      application:
+        description: 'Application'
+        required: true
+        default: 'powerpay2-1'
+        type: choice
+        options:
+          - powerpay2-1   
+      selected_services:
+        description: |
+          'Enter ArgoApps with paths to deploy(comma-separated):     
+             1. secrets:helm-deployment/powerpay2.1/secretsmanagerchart      
+             2. nginxlog:helm-deployment/powerpay2.1/ppnginxingresslogschart
+             3. rabbitmq:helm-deployment/powerpay2.1/rabbitmqchart
+             4. cm:helm-deployment/powerpay2.1/configmanagerchart
+             5. ge:helm-deployment/powerpay2.1/generalizationservicechart
+             6. iam:helm-deployment/powerpay2.1/iamservicechart
+             7. pe:helm-deployment/powerpay2.1/payrollenginechart
+             8. report-gen:helm-deployment/powerpay2.1/reportgenerationservicechart
+             9. report-process:helm-deployment/powerpay2.1/reportprocessingservicechart
+             10.24q-process:helm-deployment/powerpay2.1/24qprocessingservicechart
+             11.org:helm-deployment/powerpay2.1/organizationservicechart
+             12.ui:helm-deployment/powerpay2.1/powerpayuichart
+        required: true
+        default: ""         
+      dbEnabled:
+        description: 'Plan db'
+        required: true
+        default: 'false'
+        type: boolean        
+      remoteProvisionerEnabled:
+        description: 'Plan ArgoApps to deploy'
+        required: true
+        default: 'false'
+        type: boolean          
+      terraformApply:
+        description: 'Apply changes after Plan'
+        required: true
+        default: 'false'
+        type: boolean             
+env:
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  APPLICATION: ${{ github.event.inputs.application }}
+  DB_PLAN: ${{ github.event.inputs.dbEnabled }} 
+  REMOTEPROVISIONER_PLAN: ${{ github.event.inputs.remoteProvisionerEnabled }}   
+  TERRAFORM_APPLY: ${{ github.event.inputs.terraformApply }}  
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.7.2
+
+    - name: Set environment variables
+      run: |
+        echo "ENVIRONMENT=${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+        echo "APPLICATION=${{ env.APPLICATION }}" >> $GITHUB_ENV
+        echo "DB_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.DB_PLAN == 'true' }}" >> $GITHUB_ENV
+        echo "REMOTEPROVISIONER_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.REMOTEPROVISIONER_PLAN == 'true' }}" >> $GITHUB_ENV      
+
+    - name: Set AWS Access Key ID and Secret Access Key based on Environment
+      id: set-aws-credentials
+      run: |
+        if [ "${{ github.event.inputs.environment }}" == "dev" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
+        elif [ "${{ github.event.inputs.environment }}" == "qa" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_QA }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_QA }}" >> $GITHUB_ENV
+        elif [ "${{ github.event.inputs.environment }}" == "stage" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_STAGE }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_STAGE }}" >> $GITHUB_ENV
+        elif [ "${{ github.event.inputs.environment }}" == "prod" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_PROD }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}" >> $GITHUB_ENV
+        else
+          echo "Invalid environment!"
+          exit 1
+        fi
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1  # Adjust as necessary for your region        
+
+        
+    - name: Create .tfvars file powerpay2-1 app
+      if: env.APPLICATION == 'powerpay2-1'
+      working-directory: ./terraform_argoapp_database/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+      run: |  
+        # Read input from GitHub workflow
+        selected_services="${{ github.event.inputs.selected_services }}"
+        # Convert to array and format for tfvars
+        selected_paths=$(echo $selected_services | tr ',' '\n' | sed 's/^/"/;s/$/"/' | paste -sd "," -)  
+        
+        cat <<EOF > runtime-variables.tfvars
+        aws_access_key_id = "${{ env.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key = "${{ env.AWS_SECRET_ACCESS_KEY }}"
+        github_username = "${{ secrets.GITHB_USERNAME }}"
+        github_password = "${{ secrets.GITHB_TOKEN }}"
+        argocd_application_helmservicename-with-path = [$selected_paths]
+        EOF
+        
+    - name: Show Generated runtime-variables.tfvars
+      if: env.APPLICATION == 'powerpay2-1'
+      working-directory: ./terraform_argoapp_database/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}    
+      run: cat runtime-variables.tfvars  
+      
+    - name: Initialize and plan Terraform RemoteProvisioner
+      if: env.REMOTEPROVISIONER_PLAN == 'true'
+      working-directory: ./terraform_argoapp_database/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/remoteprovisioner
+      run: |
+        terraform init
+        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+
+    - name: Initialize and plan Terraform DB
+      if: env.DB_PLAN == 'true'
+      working-directory: ./terraform_argoapp_database/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/db
+      run: |
+        terraform init
+        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+
+
+    - name: Apply Terraform remoteprovisioner
+      if: env.REMOTEPROVISIONER_APPLY == 'true'
+      working-directory: ./terraform_argoapp_database/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/remoteprovisioner
+      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+
+    - name: Apply Terraform DB
+      if: env.DB_APPLY == 'true'
+      working-directory: ./terraform_argoapp_database/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/db
+      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve

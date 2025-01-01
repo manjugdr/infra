@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stohrmv2
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/Stohrm-Prod/Stohrm-Infra-Prod.git'
+    targetRevision: HEAD
+    path: 'helm-deployment/StoHRM-chart'
+    helm:
+      valueFiles:
+        - values-stage.yaml
+  destination:
+    server: 'https://FCFEB2A4957B6D8BC306779AEF153AD2.gr7.ap-south-1.eks.amazonaws.com'
+    namespace: stage
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  

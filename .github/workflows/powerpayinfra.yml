@@ -1,0 +1,131 @@
+name: Terraform Deploy Powerpay Infra
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - qa
+          - stage
+          - prod
+      application:
+        description: 'Application'
+        required: true
+        default: ''
+        type: choice
+        options:
+          - powerpay2-1
+      terraformApply:
+        description: 'Apply Terraform changes after Plan'
+        required: true
+        default: 'false'
+        type: boolean           
+env:
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  APPLICATION: ${{ github.event.inputs.application }} 
+  TERRAFORM_APPLY: ${{ github.event.inputs.terraformApply }} 
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.7.2
+
+    - name: Set environment variables
+      run: |
+        echo "ENVIRONMENT=${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+        echo "APPLICATION=${{ env.APPLICATION }}" >> $GITHUB_ENV
+
+    - name: Set AWS Access Key ID and Secret Access Key based on Environment
+      id: set-aws-credentials
+      run: |
+        if [ "${{ github.event.inputs.environment }}" == "dev" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}" >> $GITHUB_ENV
+          echo "RDS_GE_USERNAME=${{ secrets.RDSDEV_GE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_GE_PASSWORD=${{ secrets.RDSDEV_GE_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_USERNAME=${{ secrets.RDSDEV_REPORTS_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_PASSWORD=${{ secrets.RDSDEV_REPORTS_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_PE_USERNAME=${{ secrets.RDSDEV_PE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_PE_PASSWORD=${{ secrets.RDSDEV_PE_PASSWORD }}" >> $GITHUB_ENV             
+        elif [ "${{ github.event.inputs.environment }}" == "qa" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_QA }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_QA }}" >> $GITHUB_ENV
+          echo "RDS_GE_USERNAME=${{ secrets.RDSQA_GE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_GE_PASSWORD=${{ secrets.RDSQA_GE_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_USERNAME=${{ secrets.RDSQA_REPORTS_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_PASSWORD=${{ secrets.RDSQA_REPORTS_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_PE_USERNAME=${{ secrets.RDSQA_PE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_PE_PASSWORD=${{ secrets.RDSQA_PE_PASSWORD }}" >> $GITHUB_ENV  
+        elif [ "${{ github.event.inputs.environment }}" == "stage" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_STAGE }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_STAGE }}" >> $GITHUB_ENV
+          echo "RDS_GE_USERNAME=${{ secrets.RDSSTAGE_GE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_GE_PASSWORD=${{ secrets.RDSSTAGE_GE_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_USERNAME=${{ secrets.RDSSTAGE_REPORTS_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_PASSWORD=${{ secrets.RDSSTAGE_REPORTS_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_PE_USERNAME=${{ secrets.RDSSTAGE_PE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_PE_PASSWORD=${{ secrets.RDSSTAGE_PE_PASSWORD }}" >> $GITHUB_ENV  
+        elif [ "${{ github.event.inputs.environment }}" == "prod" ]; then
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_PROD }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}" >> $GITHUB_ENV
+          echo "RDS_GE_USERNAME=${{ secrets.RDSPROD_GE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_GE_PASSWORD=${{ secrets.RDSPROD_GE_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_USERNAME=${{ secrets.RDSPROD_REPORTS_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_REPORTS_PASSWORD=${{ secrets.RDSPROD_REPORTS_PASSWORD }}" >> $GITHUB_ENV
+          echo "RDS_PE_USERNAME=${{ secrets.RDSPROD_PE_USERNAME }}" >> $GITHUB_ENV
+          echo "RDS_PE_PASSWORD=${{ secrets.RDSPROD_PE_PASSWORD }}" >> $GITHUB_ENV  
+        else
+          echo "Invalid environment!"
+          exit 1
+        fi
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1  # Adjust as necessary for your region        
+        
+
+
+    - name: Initialize Terraform
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+      run: terraform init
+      
+    - name: Create .tfvars file powerpay
+      if: ${{ github.event.inputs.application == 'powerpay2-1' }}
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+      run: |
+        cat <<EOF > runtime-variables.tfvars
+        rds_db_username = ["${{ env.RDS_GE_USERNAME }}","${{ env.RDS_REPORTS_USERNAME }}","${{ env.RDS_PE_USERNAME }}"]
+        rds_db_password = ["${{ env.RDS_GE_PASSWORD }}","${{ env.RDS_REPORTS_PASSWORD }}","${{ env.RDS_PE_PASSWORD }}"]
+        aws_access_key_id = "${{ env.AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key = "${{ env.AWS_SECRET_ACCESS_KEY }}"
+        github_username = "${{ secrets.GITHB_USERNAME }}"
+        github_password = "${{ secrets.GITHB_TOKEN }}"
+        EOF
+
+    - name: Plan Terraform
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+      run: |
+        terraform plan -var-file="runtime-variables.tfvars" -var-file="${{ env.ENVIRONMENT }}-terraform.tfvars"
+
+    - name: Apply Terraform
+      if: ${{ github.event.inputs.terraformApply == 'true' }}
+      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+      run: |
+        terraform apply -var-file="runtime-variables.tfvars" -var-file="${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+     
+        
