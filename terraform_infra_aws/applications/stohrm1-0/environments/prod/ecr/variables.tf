@@ -4,3 +4,7 @@
 variable "repository_names" {
   type    = list(string)
 }
+variable "project_name" {
+  description = "ProjectName" 
+  default = "powerpay2.0"
+}
