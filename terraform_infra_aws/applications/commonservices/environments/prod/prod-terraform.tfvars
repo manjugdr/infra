@@ -11,7 +11,7 @@ argocd_application_helmservicename-with-path = ["secrets:helm-deployment/powerpa
 
 #ec2
 instanceType = "t2.micro" 
-keypairname = "bastionhost-key" 
+keypairname = "aws-manju" 
 associate_public_ip_address = true
 bastionhost_iamrole_name = "commonservicesv1-0-bastionhost-administratorrole"
 bastionhost_iaminstanceprofile_name = "commonservicesv1-0-bastionhost-instanceprofile"
