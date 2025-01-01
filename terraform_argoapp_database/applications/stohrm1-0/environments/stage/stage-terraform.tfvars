@@ -3,8 +3,7 @@ aws_region = "ap-south-1"
 bucket_name = "stohrm-terraform-tfstate"
 environment = "dev"
 project_name = "stohrmv2-0"
-github_username = "preethi-ascenthr"
-github_password = "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"
+
 
 #remote provisioner
 argocd_application_helmrepo = "https://github.com/Ascent-Infra/Stohrm-HelmCharts.git"

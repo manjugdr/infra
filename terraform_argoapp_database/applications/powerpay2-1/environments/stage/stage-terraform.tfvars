@@ -2,8 +2,6 @@
 aws_region = "ap-south-1"
 environment = "stage"
 project_name = "commonservicesv1-0"
-#github_username = "preethi-ascenthr"
-#github_password = "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"
 
 
 #remote provisioner
