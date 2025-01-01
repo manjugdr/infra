@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket  = "commonservices1"
-    key    = "prod/stohrmv1-1/terraform.tfstate"
+    key    = "prod/stohrmv1-1/ecr/terraform.tfstate"
     region = "ap-south-1"
   }
 }
