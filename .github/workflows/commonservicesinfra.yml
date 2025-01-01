@@ -78,6 +78,9 @@ jobs:
       with:
         terraform_version: 1.7.2
 
+    - name: Lint Terraform Code
+      run: terraform fmt -check
+
     - name: Set environment variables
       run: |
         echo "ENVIRONMENT=${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
@@ -90,7 +93,6 @@ jobs:
         echo "REMOTEPROVISIONER_APPLY=${{ env.TERRAFORM_APPLY == 'true' && env.REMOTEPROVISIONER_PLAN == 'true' }}" >> $GITHUB_ENV  
         
     - name: Set AWS Access Key ID and Secret Access Key based on Environment
-      id: set-aws-credentials
       run: |
         if [ "${{ github.event.inputs.environment }}" == "dev" ]; then
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID_DEV }}" >> $GITHUB_ENV
@@ -116,6 +118,13 @@ jobs:
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-south-1  # Adjust as necessary for your region        
         
+    - name: Save Terraform Plan
+      if: env.TERRAFORM_APPLY == 'false'
+      uses: actions/upload-artifact@v2
+      with:
+        name: terraform-plan
+        path: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
+
     - name: Create .tfvars file commonservices
       if: env.APPLICATION == 'commonservices'
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}
@@ -127,74 +136,26 @@ jobs:
         github_password = "${{ secrets.GITHB_TOKEN }}"
         EOF
         
-    - name: Initialize and plan Terraform VPC
-      if: env.VPC_PLAN == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/vpc
+    - name: Terraform Operations
       run: |
-        terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
-        
-    - name: Initialize and plan Terraform EKS
-      if: env.EKS_PLAN == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
-      run: |
-        terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
-        
-    - name: Initialize and plan Terraform EC2
-      if: env.EC2_PLAN == 'true' 
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ec2
-      run: |
-        terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
-        
-    - name: Initialize and plan Terraform ECR
-      if: env.ECR_PLAN == 'true' 
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ecr
-      run: |
-        terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+        declare -A services=(
+          [vpc]="${{ env.VPC_PLAN }}"
+          [eks]="${{ env.EKS_PLAN }}"
+          [ec2]="${{ env.EC2_PLAN }}"
+          [ecr]="${{ env.ECR_PLAN }}"
+          [efs]="${{ env.EFS_PLAN }}"
+          [remoteprovisioner]="${{ env.REMOTEPROVISIONER_PLAN }}"
+        )
 
-    - name: Initialize and plan Terraform EFS
-      if: env.EFS_PLAN == 'true' 
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/efs
-      run: |
-        terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
-                      
-    - name: Initialize and plan Terraform RemoteProvisioner
-      if: env.REMOTEPROVISIONER_PLAN == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/remoteprovisioner
-      run: |
-        terraform init
-        terraform plan -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
+        for service in "${!services[@]}"; do
+          if [ "${services[$service]}" == "true" ]; then
+            echo "Initializing and planning $service..."
+            terraform init -chdir=./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/$service
+            terraform plan -chdir=./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/$service -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars"
 
-    - name: Apply Terraform VPC
-      if: env.VPC_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/vpc
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
-      
-    - name: Apply Terraform eks
-      if: env.EKS_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/eks
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
-      
-    - name: Apply Terraform ec2
-      if: env.EC2_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ec2
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
-
-    - name: Apply Terraform ecr
-      if: env.ECR_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ecr
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
-
-    - name: Apply Terraform efs
-      if: env.EFS_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/efs
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
-
-    - name: Apply Terraform remoteprovisioner
-      if: env.REMOTEPROVISIONER_APPLY == 'true'
-      working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/remoteprovisioner
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+            if [ "${{ env.TERRAFORM_APPLY }}" == "true" ]; then
+              echo "Applying $service..."
+              terraform apply -chdir=./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/$service -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+            fi
+          fi
+        done
