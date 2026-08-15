@@ -38,7 +38,7 @@ data "terraform_remote_state" "vpc" {
 data "terraform_remote_state" "eks" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefiles"
+    bucket = "ascent-terraform-statefiles2"
     key    = "commonservices/dev/eks/terraform.tfstate"
     region = "ap-south-1"
   }
@@ -46,7 +46,7 @@ data "terraform_remote_state" "eks" {
 data "terraform_remote_state" "ec2" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefiles"
+    bucket = "ascent-terraform-statefiles2"
     key    = "commonservices/dev/ec2/terraform.tfstate"
     region = "ap-south-1"
   }
