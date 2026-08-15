@@ -23,7 +23,7 @@ module "efs" {
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
-    bucket = "ascent-terraform-statefile"
+    bucket = "ascent-terraform-statefiles2"
     key    = "commonservices/prod/vpc/terraform.tfstate"
     region = "ap-south-1"
   }
