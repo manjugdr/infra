@@ -2,7 +2,7 @@
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
-    bucket = "commonservices1"
+    bucket = "ascent-terraform-statefiles2"
     key    = "prod/vpc/terraform.tfstate"
     region = "ap-south-1"
   }
@@ -54,15 +54,6 @@ module "eks" {
   depends_on = [
     data.terraform_remote_state.vpc
   ]
-}
-# Data source to retrieve the remote state of the VPC
-data "terraform_remote_state" "vpc" {
-  backend = "s3"
-  config = {
-    bucket = "ascent-terraform-statefiles2"
-    key    = "prod/vpc/terraform.tfstate"
-    region = "ap-south-1"
-  }
 }
 
 
