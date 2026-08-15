@@ -52,7 +52,7 @@ private_subnet_additionaltags = {
 #eks-cluster
 eks_cluster_namespace = "prod"
 eks_cluster_name = "commonservicesv1-0-prod-eks"
-eks_cluster_version = "1.29"
+eks_cluster_version = "1.36"
 vpcconfig_endpoint_privateaccess = "true"
 vpcconfig_endpoint_publicaccess = "false"
 
