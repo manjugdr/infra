@@ -90,16 +90,28 @@ resource "aws_eks_node_group" "custom_node_group" {
     # may add admin
   ]
 }
+# Old Addons
+#locals {
+  #addons = {
+    #"coredns"                     = "v1.11.1-eksbuild.4"
+    #"vpc-cni"                     = "v1.16.0-eksbuild.1"
+    #"kube-proxy"                  = "v1.29.0-eksbuild.1"
+    #"eks-pod-identity-agent"      = "v1.1.0-eksbuild.1"
+    #"aws-mountpoint-s3-csi-driver" = "v1.3.0-eksbuild.1"
+    #"aws-ebs-csi-driver"          = "v1.29.1-eksbuild.1"
+    #"aws-efs-csi-driver"          = "v2.0.4-eksbuild.1"
+  #}
+#}
 
 locals {
   addons = {
-    "coredns"                     = "v1.11.1-eksbuild.4"
-    "vpc-cni"                     = "v1.16.0-eksbuild.1"
-    "kube-proxy"                  = "v1.29.0-eksbuild.1"
-    "eks-pod-identity-agent"      = "v1.1.0-eksbuild.1"
-    "aws-mountpoint-s3-csi-driver" = "v1.3.0-eksbuild.1"
-    "aws-ebs-csi-driver"          = "v1.29.1-eksbuild.1"
-    "aws-efs-csi-driver"          = "v2.0.4-eksbuild.1"
+    "coredns"                      = "v1.14.3-eksbuild.3"
+    "vpc-cni"                      = "v1.22.4-eksbuild.3"
+    "kube-proxy"                   = "v1.36.0-eksbuild.14"
+    "eks-pod-identity-agent"       = "v1.3.10-eksbuild.2"
+    "aws-mountpoint-s3-csi-driver" = "v2.6.0-eksbuild.1"
+    "aws-ebs-csi-driver"           = "v1.37.0-eksbuild.1"
+    "aws-efs-csi-driver"           = "v2.1.4-eksbuild.1"
   }
 }
 
