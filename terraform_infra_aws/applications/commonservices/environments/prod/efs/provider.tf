@@ -6,7 +6,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "ascent-terraform-statefile"
+    bucket = "ascent-terraform-statefiles2"
     key    = "commonservices/prod/efs/terraform.tfstate"
     region = "ap-south-1"
   }
