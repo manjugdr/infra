@@ -108,10 +108,10 @@ locals {
     "coredns"                      = "v1.14.3-eksbuild.3"
     "vpc-cni"                      = "v1.22.4-eksbuild.3"
     "kube-proxy"                   = "v1.36.0-eksbuild.14"
-    "eks-pod-identity-agent"       = "v1.3.10-eksbuild.2"
-    "aws-mountpoint-s3-csi-driver" = "v2.6.0-eksbuild.1"
-    "aws-ebs-csi-driver"           = "v1.37.0-eksbuild.1"
-    "aws-efs-csi-driver"           = "v2.1.4-eksbuild.1"
+    "eks-pod-identity-agent"       = "v1.3.10-eksbuild.3"
+    "aws-mountpoint-s3-csi-driver" = "v2.7.0-eksbuild.1"
+    "aws-ebs-csi-driver"           = "v1.63.1-eksbuild.1"
+    "aws-efs-csi-driver"           = "v3.4.1-eksbuild.1"
   }
 }
 
