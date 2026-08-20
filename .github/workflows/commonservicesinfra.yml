@@ -182,7 +182,7 @@ jobs:
     - name: Apply Terraform ec2
       if: env.EC2_APPLY == 'true'
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/ec2
-      run: terraform destory -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+      run: terraform destroy -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
 
     - name: Apply Terraform ecr
       if: env.ECR_APPLY == 'true'
