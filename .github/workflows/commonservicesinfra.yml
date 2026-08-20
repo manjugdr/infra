@@ -172,7 +172,7 @@ jobs:
     - name: Apply Terraform VPC
       if: env.VPC_APPLY == 'true'
       working-directory: ./terraform_infra_aws/applications/${{ env.APPLICATION }}/environments/${{ env.ENVIRONMENT }}/vpc
-      run: terraform apply -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
+      run: terraform destory -var-file="../runtime-variables.tfvars" -var-file="../${{ env.ENVIRONMENT }}-terraform.tfvars" -auto-approve
       
     - name: Apply Terraform eks
       if: env.EKS_APPLY == 'true'
